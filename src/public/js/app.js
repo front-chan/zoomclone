@@ -1,6 +1,9 @@
 // alert("hello!");
 // console.log("hello");
 
+const messageList = document.querySelector("ul");
+const messageForm = document.querySelector("form");
+
 // 새로고침할 때 작동함
 const socket = new WebSocket(`ws://${window.location.host}`);
 
@@ -26,6 +29,19 @@ socket.addEventListener("close", () => {
 // FE > BE로 메세지 보내기
 // 1. 메시지 보내기
 // 즉시 실행되길 원하지 않기 때문에 timeout을 사용함
-setTimeout(() => {
-  socket.send("hello from the browser");
-}, 10000);
+// setTimeout(() => {
+//   socket.send("hello from the browser");
+// }, 10000);
+
+function handleSubmit(event) {
+  event.preventDefault();
+  const input = messageForm.querySelector("input");
+  // FE의 form에서 BE로 무언가를 보냄
+  socket.send(input.value);
+  // input에 메시지를 입력하고 send버튼을 누르면 콘솔에 출력됨
+  // console.log(input.value);
+  // send 후 input값 비우기
+  input.value = "";
+}
+
+messageForm.addEventListener("submit", handleSubmit);
