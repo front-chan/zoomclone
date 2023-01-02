@@ -1,5 +1,6 @@
 import http from "http";
-import WebSocket from "ws";
+// import WebSocket from "ws";
+import SocketIO from "socket.io";
 import express from "express";
 
 const app = express();
@@ -13,14 +14,26 @@ app.get("/*", (_, res) => res.redirect("/"));
 const handleListen = () => console.log(`Listening on http://localhost:4000`);
 // app.listen(4000, handleListen);
 
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
+const httpServer = http.createServer(app);
+// const wss = new WebSocket.Server({ server });
+const wsServer = SocketIO(httpServer);
+
+wsServer.on("connection", (socket) => {
+  // console.log(socket);
+  socket.on("enter_room", (msg, done) => {
+    console.log(msg);
+    setTimeout(() => {
+      done();
+    }, 10000);
+  });
+});
 
 // function handleConnection(socket) {
 //   console.log(socket);
 // }
 // wss.on("connection", handleConnection);
 
+/*
 // 누군가 우리 서버에 연결하면 connection을 넣을 변수
 const sockets = [];
 
@@ -52,7 +65,7 @@ wss.on("connection", (socket) => {
         break;
     }
 
-    /*
+
     if (parsed.type === "new_message") {
       // 각 브라우저를 aSocket으로 표시하고 메세지를 보낸다는 의미
       // sockets.forEach((aSocket) => aSocket.send(message.toString("utf8")));
@@ -60,7 +73,7 @@ wss.on("connection", (socket) => {
     } else if (parsed.type === "nickname") {
       console.log(parsed.payload);
     }
-    */
+  
 
     // message만 보냈을 경우
     // <Buffer 68 65 6c 6c 6f 20 66 72 6f 6d 20 74 68 65 20 62 72 6f 77 73 65 72> 출력됨
@@ -73,8 +86,9 @@ wss.on("connection", (socket) => {
   // socket으로 데이터를 보냄 (브라우저에 메세지를 보내기)
   //   socket.send("hello!!!");
 });
+*/
 
-server.listen(4000, handleListen);
+httpServer.listen(4000, handleListen);
 
 // {
 //     type: 'message',
