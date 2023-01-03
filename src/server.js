@@ -19,6 +19,7 @@ const httpServer = http.createServer(app);
 const wsServer = SocketIO(httpServer);
 
 wsServer.on("connection", (socket) => {
+  socket["nickname"] = "Anon";
   // console.log(socket);
   socket.onAny((event) => {
     console.log(`Socket Event: ${event}`);
@@ -33,15 +34,18 @@ wsServer.on("connection", (socket) => {
     // setTimeout(() => {
     //   done("hello from the backend");
     // }, 15000);
-    socket.to(roomName).emit("welcome");
+    socket.to(roomName).emit("welcome", socket.nickname);
   });
   socket.on("disconnecting", () => {
-    socket.rooms.forEach((room) => socket.to(room).emit("bye"));
+    socket.rooms.forEach((room) =>
+      socket.to(room).emit("bye", socket.nickname)
+    );
   });
   socket.on("new_message", (msg, room, done) => {
-    socket.to(room).emit("new_message", msg);
+    socket.to(room).emit("new_message", `${socket.nickname}: ${msg}`);
     done();
   });
+  socket.on("nickname", (nickname) => (socket["nickname"] = nickname));
 });
 
 // function handleConnection(socket) {
