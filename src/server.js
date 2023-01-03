@@ -1,6 +1,7 @@
 import http from "http";
 // import WebSocket from "ws";
-import SocketIO from "socket.io";
+import { Server } from "socket.io";
+import { instrument } from "@socket.io/admin-ui";
 import express from "express";
 
 const app = express();
@@ -11,12 +12,21 @@ app.use("/public", express.static(__dirname + "/public"));
 app.get("/", (_, res) => res.render("home"));
 app.get("/*", (_, res) => res.redirect("/"));
 
-const handleListen = () => console.log(`Listening on http://localhost:4000`);
+const handleListen = () => console.log(`Listening on http://localhost:3000`);
 // app.listen(4000, handleListen);
 
 const httpServer = http.createServer(app);
 // const wss = new WebSocket.Server({ server });
-const wsServer = SocketIO(httpServer);
+const wsServer = new Server(httpServer, {
+  cors: {
+    origin: ["https://admin.socket.io"],
+    credentials: true,
+  },
+});
+
+instrument(wsServer, {
+  auth: false,
+});
 
 function publicRooms() {
   const {
@@ -134,7 +144,7 @@ wss.on("connection", (socket) => {
 });
 */
 
-httpServer.listen(4000, handleListen);
+httpServer.listen(3000, handleListen);
 
 // {
 //     type: 'message',
