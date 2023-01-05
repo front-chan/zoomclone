@@ -97,6 +97,15 @@ function handleCameraClick() {
 async function handleCameraChange() {
     //   console.log(camerasSelect.value);
     await getMedia(camerasSelect.value);
+    if (myPeerConnection) {
+        // console.log(myPeerConnection.getSenders());
+        const videoTrack = myStream.getVideoTracks()[0];
+        const videoSender = myPeerConnection
+            .getSenders()
+            .find((sender) => sender.track.kind === "video");
+        // console.log(videoSender);
+        videoSender.replaceTrack(videoTrack);
+    }
 }
 
 muteBtn.addEventListener("click", handleMuteClick);
@@ -139,16 +148,24 @@ socket.on("welcome", async () => {
 });
 
 socket.on("offer", async (offer) => {
+    console.log("received the offer");
     myPeerConnection.setRemoteDescription(offer);
     // console.log(offer);
     const answer = await myPeerConnection.createAnswer();
     myPeerConnection.setLocalDescription(answer);
     // console.log(answer);
     socket.emit("answer", answer);
+    console.log("sent the answer");
 });
 
-socket.on("answer", async (answer) => {
+socket.on("answer", (answer) => {
+    console.log("received the answer");
     myPeerConnection.setRemoteDescription(answer);
+});
+
+socket.on("ice", (ice) => {
+    console.log("received candidate");
+    myPeerConnection.addIceCandidate(ice);
 });
 
 // RTC Code
@@ -156,7 +173,25 @@ socket.on("answer", async (answer) => {
 function makeConnection() {
     myPeerConnection = new RTCPeerConnection();
     // console.log(myStream.getTracks());
+    myPeerConnection.addEventListener("icecandidate", handleIce);
+    myPeerConnection.addEventListener("addstream", handleAddStream);
     myStream
         .getTracks()
         .forEach((track) => myPeerConnection.addTrack(track, myStream));
+}
+
+function handleIce(data) {
+    console.log("sent candidate");
+    socket.emit("ice", data.candidate, roomName);
+
+    // console.log("got ice candidate");
+    // console.log(data);
+}
+
+function handleAddStream(data) {
+    // console.log("got an stream from my peer");
+    const peerFace = document.getElementById("peerFace");
+    // console.log("Peers Stream", data.stream);
+    // console.log("My stream", myStream);
+    peerFace.srcObject = data.stream;
 }
